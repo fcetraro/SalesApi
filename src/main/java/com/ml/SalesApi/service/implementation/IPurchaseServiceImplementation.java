@@ -22,8 +22,8 @@ import java.util.List;
 public class IPurchaseServiceImplementation implements IPurchaseService {
     @Autowired
     private IReceiptDAO receipts;
-    final String uri = "http://localhost:8080/";
-    final String articlesEndpoint = "api/v1/articles/search";
+    final String uri = "http://localhost:8080/api/v1";
+    final String articlesEndpoint = "/articles";
 
     @Override
     public PurchaseResponseDTO purchaseProducts(PurchaseDTO purchase) {
@@ -67,24 +67,24 @@ public class IPurchaseServiceImplementation implements IPurchaseService {
     }
 
     private List<ArticleDTO> getProducts(List<ArticlesRequestDTO> articles) {
-        String getProductsUri = uri + articlesEndpoint + getRequestParams(articles);
+        String getProductsUri = uri + articlesEndpoint + "/search" + getRequestParams(articles);
         try {
             RestTemplate restTemplate = new RestTemplate();
             return restTemplate.getForObject(getProductsUri, ArticlesDTO.class).getArticles();
         } catch (Exception e) {
-            throw new ConnectionException("Error al comunicar con ProductsApi",e);
+            throw new ConnectionException("Error al comunicar con ProductsApi: "+e.getMessage(),e);
         }
     }
 
     private void modifyProducts(List<QuantityArticleDTO> articles) {
-        String getProductsUri = uri + "api/v1/articles/buy";
+        String getProductsUri = uri + articlesEndpoint + "/buy";
         BuyedArticlesDTO buys = new BuyedArticlesDTO();
         buys.setArticles(articles);
         try {
             RestTemplate restTemplate = new RestTemplate();
             restTemplate.put(getProductsUri, buys);
         } catch (Exception e) {
-            throw new ConnectionException("Error al comunicar con ProductsApi",e);
+            throw new ConnectionException("Error al comunicar con ProductsApi: "+e.getMessage(),e);
         }
     }
 
@@ -111,7 +111,7 @@ public class IPurchaseServiceImplementation implements IPurchaseService {
     }
 
     private double calculateArticlePrice(ArticleDTO articleDTO, ArticlesRequestDTO articlesRequestDTO) {
-        double discountPerItem = articleDTO.getPrice() * articlesRequestDTO.getDiscount();
+        double discountPerItem = articleDTO.getPrice() * articlesRequestDTO.getDiscount() / 100;
         return (articleDTO.getPrice() - discountPerItem) * articlesRequestDTO.getQuantity();
     }
 }

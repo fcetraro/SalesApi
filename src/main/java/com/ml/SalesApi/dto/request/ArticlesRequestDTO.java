@@ -2,7 +2,7 @@ package com.ml.SalesApi.dto.request;
 
 public class ArticlesRequestDTO {
     int productId, quantity;
-    Double discount;
+    int discount;
 
     public int getProductId() {
         return productId;
@@ -20,11 +20,11 @@ public class ArticlesRequestDTO {
         this.quantity = quantity;
     }
 
-    public Double getDiscount() {
+    public int getDiscount() {
         return discount;
     }
 
-    public void setDiscount(Double discount) {
+    public void setDiscount(int discount) {
         this.discount = discount;
     }
 }

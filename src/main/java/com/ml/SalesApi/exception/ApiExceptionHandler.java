@@ -15,13 +15,13 @@ import java.time.ZonedDateTime;
 public class ApiExceptionHandler {
     @ExceptionHandler(value = {NoStockException.class})
     public ResponseEntity<Object> handleApiRequestException(NoStockException e){
-        HttpStatus status = HttpStatus.BAD_REQUEST;
+        HttpStatus status = HttpStatus.NOT_FOUND;
         ApiException exception = new ApiException(e.getMessage(), e, status, ZonedDateTime.now());
         return new ResponseEntity<>(exception, status);
     }
     @ExceptionHandler(value = {ProductNotFoundException.class})
     public ResponseEntity<Object> handleNotFoundRequestException(ProductNotFoundException e){
-        HttpStatus status = HttpStatus.BAD_REQUEST;
+        HttpStatus status = HttpStatus.NOT_FOUND;
         ApiException exception = new ApiException(e.getMessage(), e, status, ZonedDateTime.now());
         return new ResponseEntity<>(exception, status);
     }
