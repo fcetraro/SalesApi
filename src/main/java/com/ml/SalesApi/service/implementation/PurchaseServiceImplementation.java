@@ -1,5 +1,7 @@
 package com.ml.SalesApi.service.implementation;
 
+import com.ml.SalesApi.communicator.IProductApiCommunicator;
+import com.ml.SalesApi.communicator.implementation.ProductApiCommunicator;
 import com.ml.SalesApi.dao.IReceiptDAO;
 import com.ml.SalesApi.dto.ArticleDTO;
 import com.ml.SalesApi.dto.request.*;
@@ -19,11 +21,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Service
-public class IPurchaseServiceImplementation implements IPurchaseService {
+public class PurchaseServiceImplementation implements IPurchaseService {
     @Autowired
     private IReceiptDAO receipts;
-    final String uri = "http://localhost:8080/api/v1";
-    final String articlesEndpoint = "/articles";
+
+    private IProductApiCommunicator productApi;
+
+    @Autowired
+    public PurchaseServiceImplementation(IProductApiCommunicator implementation){
+        productApi=implementation;
+    }
 
     @Override
     public PurchaseResponseDTO purchaseProducts(PurchaseDTO purchase) {
@@ -52,40 +59,12 @@ public class IPurchaseServiceImplementation implements IPurchaseService {
         throw new ProductNotFoundException("Producto que desea comprar no existe", new Exception());
     }
 
-    private String getRequestParams(List<ArticlesRequestDTO> articles){
-        String requestParams = "";
-        boolean first = true;
-        for (ArticlesRequestDTO article:articles) {
-            char separator  = '&';
-            if(first){
-                first=false;
-                separator='?';
-            }
-            requestParams = requestParams+separator+"id="+article.getProductId();
-        }
-        return requestParams;
-    }
-
-    private List<ArticleDTO> getProducts(List<ArticlesRequestDTO> articles) {
-        String getProductsUri = uri + articlesEndpoint + "/search" + getRequestParams(articles);
-        try {
-            RestTemplate restTemplate = new RestTemplate();
-            return restTemplate.getForObject(getProductsUri, ArticlesDTO.class).getArticles();
-        } catch (Exception e) {
-            throw new ConnectionException("Error al comunicar con ProductsApi: "+e.getMessage(),e);
-        }
+    public List<ArticleDTO> getProducts(List<ArticlesRequestDTO> articles) {
+        return productApi.getProducts(articles);
     }
 
     private void modifyProducts(List<QuantityArticleDTO> articles) {
-        String getProductsUri = uri + articlesEndpoint + "/buy";
-        BuyedArticlesDTO buys = new BuyedArticlesDTO();
-        buys.setArticles(articles);
-        try {
-            RestTemplate restTemplate = new RestTemplate();
-            restTemplate.put(getProductsUri, buys);
-        } catch (Exception e) {
-            throw new ConnectionException("Error al comunicar con ProductsApi: "+e.getMessage(),e);
-        }
+        productApi.modifyProducts(articles);
     }
 
     private ReceiptDTO generateReceipt(List<ArticleDTO> fullArticles, List<ArticlesRequestDTO> articles) {
@@ -97,7 +76,7 @@ public class IPurchaseServiceImplementation implements IPurchaseService {
                 throw new NoStockException("No hay stock del producto "+fullArticles.get(i).getName(), new Exception());
             }
             QuantityArticleDTO toModify = new QuantityArticleDTO();
-            toModify.setQuantityBuyed(articles.get(i).getQuantity());
+            toModify.setQuantityBought(articles.get(i).getQuantity());
             toModify.setId(articles.get(i).getProductId());
             buyedArticles.add(toModify);
         }
